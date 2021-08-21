@@ -90,7 +90,23 @@ New project:
 				* "def test_signup(self)"
 			* docker-compose exec web python manage.py test
 	7. Environment variables:
-		-
+		- Install Environs:
+			* docker-compose exec web pipenv install 'environs[django]'
+			* decker-compose down
+			* docker-compose up -d --build
+		- "settings.py"
+			* from environs import #!/usr/bin/env python
+			* env = Env()
+			* env.read_env()
+			* SECRET_KEY = env("DJANGO_SECRETE_KEY")
+			* DEBUG = env.bool("DJANGO_DEBUG", default=False)
+			* ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+			* DATABASES = {
+							"default": env.dj_db_url("DATABASE_URL", default="postgres://postgres@db/postgres")
+							}
+		- In "evironment:" under "web" in 'docker-compose.yml' (if there is '$' sign, then you need cahnge to '$$'):
+			* - "DJANGO_SECRETE_KEY=gr3e87i3y4hith3uoierws9834"
+			* - "DJANGO_DEBUG=createsuperuser"
 
 
 
