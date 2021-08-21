@@ -1,0 +1,188 @@
+Git exclude:
+/.idea/
+/.*
+/db.sqlite3
+
+
+New project:
+	1. Packeges:
+		- psycopg2-binary (for PostgreSQL)
+	2. Docker:
+		- Create "Dockerfile"
+		- Create "docker-compose.yml"
+		- docker-compose up -d --build
+		- http://127.0.0.1:8000/
+		- Check that django main page is loading
+	3. First migration: (https://docs.djangoproject.com/en/3.2/topics/auth/customizing/#substituting-a-custom-user-model)
+		- Edit "DATABASES" in "settings.py" for desired DB
+		- docker-compose exec web python manage.py startapp accounts
+		- Create "class CustomUser(AbstractUser)" in "accounts/models.py"
+		- "settings.py":
+			* Add "accounts" to "INSTALLED_APPS"
+			* Add "AUTH_USER_MODEL = 'accounts.CustomUser'"
+		- Docker commands:
+			* docker-compose exec web python manage.py makemigrations accounts
+			* docker-compose exec web python manage.py migrate
+	4. Create superuser
+		- "accounts/admin.py":
+			* Create "CustomUserManager(UserManager)" if needed
+			* "User = get_user_model()"
+			* "CustomUserAdmin(UserAdmin)"
+			* "admin.site.register(User, CustomUserAdmin)"
+		- docker-compose exec web python manage.py createsuperuser
+		- Go to http://127.0.0.1:8000/admin and test login
+	5. Unit Tests:
+		- "class UserTest":
+			* "def test_create_user(self)"
+			* "def test_create_superuser(self)"
+		- docker-compose exec web python manage.py test
+	6. User CRUD:
+		- Docker commands:
+			* docker-compose exec web pipenv install django-allauth
+			* docker-compose down
+			* docker-compose up -d --build
+		- settings.py:
+			* Add "allauth" and "allauth.accounts" and "django.contrib.sites" to "INSTALLED_APPS"
+			* Add "SITE_ID = 1"
+			* AUTHENTICATION_BACKENDS = [
+											# Needed to login by username in Django admin, regardless of `allauth`
+											'django.contrib.auth.backends.ModelBackend',
+
+											# `allauth` specific authentication methods, such as login by e-mail
+											'allauth.account.auth_backends.AuthenticationBackend',
+										]  # Authentication backend
+			* SOCIALACCOUNT_PROVIDERS = {  # Only if needed
+										    'google': {
+										        # For each OAuth based provider, either add a ``SocialApp``
+										        # (``socialaccount`` app) containing the required client
+										        # credentials, or list them here:
+										        'APP': {
+										            'client_id': '123',
+										            'secret': '456',
+										            'key': ''
+										        }
+										    }
+										}  # Provider specific settings
+			* EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Temporary email backend. Should be SMTP backend in deployed version
+			* LOGIN_REDIRECT_URL = 'home'  # Redirects to 'home' url after login
+			* ACCOUNT_LOGOUT_REDIRECT = 'home'  # Redirects to 'home' url after logout
+			* ACCOUNT_SESSION_REMEMBER = None  # None: asks the user if to remember session, True: to remember session, False: to not remember session
+			* ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False  # True: asks the user to enter the password 2 times at sign up, False: asks the user to enter the password 1 time at sign up
+		- "docker-compose exec web python manage.py migrate"
+		- Add "path('accounts/', include('allauth.urls'))," in "urlpatterns" in the main "urls.py"
+		- Add templates to "templates/account/" directory
+			* 'login.html'
+			* 'logout.html'
+			* 'signup.html'
+		- Correct urls:
+			* 'account_login'
+			* 'account_logout'
+			* 'account_signup'
+		- Login using Email:
+			* "setting.py"
+				* ACCOUNT_USERNAME_REQUIRED = False
+				* ACCOUNT_AUTHENTICATION_METHOD = 'email'
+				* ACCOUNT_EMAIL_REQUIRED = True
+				* ACCOUNT_UNIQUE_EMAIL = True
+			* 'username' will be automatically populated by removing the text after '@' in the email. If username conflict, allauth automatically ads a random integer at the end of the username
+		- Tests:
+			* "class UserTest":
+				* "def test_signup(self)"
+			* docker-compose exec web python manage.py test
+	7. Environment variables:
+		-
+
+
+
+
+
+Static Assets:
+	1. Edit "settings.py":
+		- STATIC_URL = '/static/'  # Sets the URL that we can use to reference static files
+		- STATICFILES_DIRS = [str(BASE_DIR.joinpath('static')),]  # Define the location of static file in local development
+		- STATIC_ROOT = str(BASE_DIR.joinpath('staticfiles'))  # Defines the location of static files in production
+		- # STATICFILES_STORAGE # File storage engine to use when collecting static files with the collectstatic management command. Default: django.contrib.staticfiles.storage.StaticFilesStorage
+		- STATICFILE_FINDER = [
+									# Find files stored in the STATICFILES_DIRS setting
+									'django.contrib.staticfiles.finders.FileSystemFinder',
+
+									# Find files stored in a static subdirectory of each app
+									'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+								]  # List of finder backends that know how to find static files in various locations
+	2. Create directories:
+		- static
+		- static/css
+		- static/js
+		- static/images
+	3. Load static files in a HTML template using "{% load static %}"
+	4. To collect static files for production, run "docker-compose exec web python manage.py collectstatic"
+
+
+
+crispy_forms :
+	1. docker-compose exec web pipenv install django-crispy-forms
+	2. Add 'crispy_forms', to "INSTALLED_APPS" in "setting.py"
+	4. Add "CRISPY_TEMPLATE_PACK = 'uni_form'" to "setting.py"
+		- The following template packs are avaliable:
+			* bootstrap
+			* bootstrap3
+			* bootstrap4
+			* uni_form
+			* foundation
+			* tailwind
+	5. Add "{% load crispy_forms_tags %}" at the top of a HTML template
+		- Change "{{ form.as_p }}" to "{{ form|crispy }}"
+
+
+
+
+New project:
+	1. Install:
+		* environs
+		* dj-database-url
+		* psycopg2-binary (for PostgreSQL)
+	2. Create .env file in root:
+		export DEBUG=True
+		export SECRET_KEY=random-secrete-string
+		export DATABASE_URL=sqlite:///db.sqlite3
+	3. Settings.py:
+		* update at top:
+			from environs import Env
+
+
+			# Environment variables
+			env = Env()
+			env.read_env()
+		* ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
+		* DEBUG = env.bool("DEBUG", default=False)
+		* Update DATABASES:
+			DATABASES = {
+				'default': env.dj_db_url("DATABASE_URL")
+			}
+	4. Update SECRET_KEY (Optional):
+		* Run code:
+			import secrets
+			print(secrets.token_urlsafe())
+		* Update SECRET_KEY with output
+
+
+First Deployment:
+	1. Install gunicorn
+	2. Create Procfile file in root
+		web: gunicorn PROJECT_NAME:wsgi --log-file -
+	3. heroku login
+	4. heroku crate --website_name
+	5. heroku git:remote -a --website_name
+	6. herokuaddons:create heroku-postgresql:hobby-dev
+	7. heroku configure:set SECRET_KEY='--secrete_key'
+	8. git push heroku master
+	9. heroku ps:scale web=1
+	10. heroku run python manage.py migrate
+	10. heroku run python manage.py createsuperuser
+
+
+
+Deployment:
+	1. heroku login
+	2. git push heroku master
+	3. heroku ps:scale web=1
