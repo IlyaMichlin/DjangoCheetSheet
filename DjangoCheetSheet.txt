@@ -180,9 +180,9 @@ New project:
 			* Add "PermissionRequiredMixin" to the desired view 2nd inheritence and add:
 				permission_reqired = 'custom_model.permision_name'
 		- Use "UserPassesTestMixin" and "Groups" to make more restricting permissions
-
-
-
+		- Unit tests
+	12. Performance
+		-
 
 
 
@@ -232,7 +232,23 @@ File/Image Upload:
 
 
 Search:
-	1. 
+	1. Add new path 'search/' to "urlpatterns" in the main "urls.py"
+	2. Create a view. This view may extend from "ListView"
+		- queryset = Post.objects.filter()  # Example of simple filtering
+			* Simple querysets:
+				* filter()
+				* all()
+				* get()
+				* exclude()
+			* https://docs.djangoproject.com/en/3.2/topics/db/queries/#retrieving-objects
+			* https://docs.djangoproject.com/en/3.2/topics/db/managers/#django.db.models.Manager
+			* https://docs.djangoproject.com/en/3.2/ref/models/querysets/#contains
+		- def get_queryset(self):  # For more complex filtering
+			return Post.objects.filter(
+										query = self.request.GET.get('q')
+										Q(filter_logic_1=q) | Q(filter_logic_2=q)
+										)
+	4. For a non-REST website, create a template
 
 
 
@@ -249,16 +265,6 @@ crispy_forms :
 			* tailwind
 	5. Add "{% load crispy_forms_tags %}" at the top of a HTML template
 		- Change "{{ form.as_p }}" to "{{ form|crispy }}"
-
-
-
-
-
-
-
-
-
-
 
 
 
