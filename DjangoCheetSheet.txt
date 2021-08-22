@@ -403,23 +403,49 @@ crispy_forms :
 
 
 
-First Deployment:
-	1. Install gunicorn
-	2. Create Procfile file in root
-		web: gunicorn PROJECT_NAME:wsgi --log-file -
-	3. heroku login
-	4. heroku crate --website_name
-	5. heroku git:remote -a --website_name
-	6. herokuaddons:create heroku-postgresql:hobby-dev
-	7. heroku configure:set SECRET_KEY='--secret_key'
-	8. git push heroku master
-	9. heroku ps:scale web=1
-	10. heroku run python manage.py migrate
-	10. heroku run python manage.py createsuperuser
-
-
-
-Deployment:
-	1. heroku login
-	2. git push heroku master
-	3. heroku ps:scale web=1
+Deployment
+	1. Collect static files
+		- docker-compose exec web pipenv install whitenoise
+		- docker-compose down
+		- Add 'whitenoise.runserver_nonstatic' before 'django.contrib.staticfiles' in "INSTALLED_APPS" in "settings.py"
+		- Add 'whitenoise.middleware.WhiteNoiseMiddleware' after 'django.middleware.security.SecurityMiddleware' in "MIDDLEWARE" in "settings.py"
+		- docker-compose up -d --build
+		- docker-compose exec web python manage.py collectstatic
+	2. Media Files
+		- Whitenois cannot work with media files (http://whitenoise.evans.io/en/stable/django.html#serving-media-files)
+		- Use django-storages for media storage on dedicated CDN like S3 (https://django-storages.readthedocs.io/en/latest/)
+	3. Gunicorn (or uWSGI)
+		- docker-compose exec web pipenv install gunicorn
+		- docker-compose down
+		- Update all '*.yml' files:
+			* command: gunicorn config.wsgi -b 0.0.0.0:8000
+		- docker-compose up -d --build
+	4. Heroku
+		- Create "heroku.yml"
+			* https://devcenter.heroku.com/articles/build-docker-images-heroku-yml
+			* Four top level sections: setup, build, release, run
+	5. Heroku First Deployment:
+		- Install gunicorn
+		- Add to "settings.py"
+			* SECURE_PROXY_SSL_HEADERS = ('HTTP_X_FORWARDED_PROTO', 'https')
+		- heroku login
+		- heroku crate --website_name
+		- In Heroku, go to "Settings" and add set environment variables
+			* "DJANGO_SECRET_KEY=secrete_key"
+			* "DJANGO_ALLOWED_HOSTS=['website_domain', 'localhost', '127.0.0.1']"
+		- heroku stack:set container -a website_name
+		- heroku addons:create heroku-postgresql:hobby-dev -a website_name
+		- heroku git:remote -a --website_name
+		- herokuaddons:create heroku-postgresql:hobby-dev
+		- heroku configure:set SECRET_KEY='--secret_key'
+		- git push heroku master
+		- heroku ps:scale web=1
+		- heroku run python manage.py migrate
+		- heroku run python manage.py createsuperuser
+		- heroku open -a website_name
+	6. Heroku Deployment:
+		- heroku login
+		- git push heroku master
+		- heroku ps:scale web=1
+	7. Heroku logs
+		- heroku logs --tail
