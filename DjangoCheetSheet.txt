@@ -1,6 +1,8 @@
 Git exclude:
 /.idea/
 /.*
+/docker-compose-prod.yml
+/__pycache__/
 /db.sqlite3
 
 
@@ -103,14 +105,14 @@ New project:
 			* from environs import #!/usr/bin/env python
 			* env = Env()
 			* env.read_env()
-			* SECRET_KEY = env("DJANGO_SECRETE_KEY")
+			* SECRET_KEY = env("DJANGO_SECRET_KEY")
 			* DEBUG = env.bool("DJANGO_DEBUG", default=False)
 			* ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 			* DATABASES = {
 							"default": env.dj_db_url("DATABASE_URL", default="postgres://postgres@db/postgres")
 							}
 		- In "evironment:" under "web" in 'docker-compose.yml' (if there is '$' sign, then you need cahnge to '$$'):
-			* - "DJANGO_SECRETE_KEY=gr3e87i3y4hith3uoierws9834"
+			* - "DJANGO_SECRET_KEY=gr3e87i3y4hith3uoierws9834"
 			* - "DJANGO_DEBUG=createsuperuser"
 	8. Email:
 		- Crate files (https://github.com/pennersr/django-allauth/tree/master/allauth/templates/account/email):
@@ -241,7 +243,17 @@ New project:
 			* Images optimization e-book: https://web.dev/fast/#optimize-your-images
 			* Automated test for front-end speed: https://developers.google.com/speed/pagespeed/insights/
 	13. Security
-		- 
+		- Upgrading django
+			* https://docs.djangoproject.com/en/3.2/howto/upgrade-version/
+			* docker-compose exec web python -Wa manage.py test
+		- Deployment checklist
+			* https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+			* docker-compose exec web python manage.py check --deploy
+		- docker-compose-prod.yml
+			* Copy docker-compose.yml and make the follofing changes
+				* "DJANGO_SECRET_KEY=new_serete_key"
+			* docker-compose -f decker-compose-prod.yml up -d --build
+			* docker-compose exec web python manage.py migrate
 
 
 
@@ -311,6 +323,70 @@ Search:
 
 
 
+Create Secret Key:
+	1. docker-compose exec web python -c 'import secrets; print(secrets.token_urlsafe(38))'
+	2. Copy the generated token as "DJANGO_SECRET_KEY"
+	3. Change any '$' in the Secret Key to '$$'
+
+
+
+Common attacks:
+	1. https://docs.djangoproject.com/en/3.2/topics/security/
+	2. https://docs.djangoproject.com/en/3.2/ref/middleware/#module-django.middleware.security
+	3. SQL Injection
+		- https://en.wikipedia.org/wiki/SQL_injection
+		- https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.md
+	4. XSS (Cross Site Scripting)
+		- https://en.wikipedia.org/wiki/Cross-site_scripting
+		- https://docs.djangoproject.com/en/3.2/ref/templates/language/#automatic-html-escaping
+		- https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.md
+	5. CSRF (Cross Site Request Forgery)
+		- https://en.wikipedia.org/wiki/Cross-site_request_forgery
+		- https://docs.djangoproject.com/en/3.2/ref/csrf/
+		- https://docs.djangoproject.com/en/3.2/ref/middleware/#django.middleware.csrf.CsrfViewMiddleware
+		- https://docs.djangoproject.com/en/3.2/ref/templates/builtins/#csrf-token
+		- https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md
+	6. Clickjack
+		- https://en.wikipedia.org/wiki/Clickjacking
+		- https://docs.djangoproject.com/en/3.2/ref/clickjacking/
+		- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+		- https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Clickjacking_Defense_Cheat_Sheet.md
+	7. HTTP/SSL
+		- https://en.wikipedia.org/wiki/HTTPS
+		- https://en.wikipedia.org/wiki/SSL
+		- https://en.wikipedia.org/wiki/Transport_Layer_Security
+		- Add to "settings.py"
+			* SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SST_REDIRECT", default=True)
+		- Add to "environment" in "web" in "docker-compose.yml"
+			* "DJANGO_SECURE_SST_REDIRECT=False"
+	8. HSTS (HTTP Strict Transport Security)
+		- https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security
+		- https://docs.djangoproject.com/en/3.2/ref/middleware/#http-strict-transport-security
+		- Add to "settings.py"
+			* SECURE_HSTS_SECONDS = env.int("DJANGO_SECURE_HSTS_SECONDS", default=2592000)  # One month
+			* SECURE_HSTS_INCLUDE_SUBDOMAILS = env.bool("DJANDO_SECUREHSTS_INCLUDE_SUBDOMAILS", default=True)
+			* SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=True)
+		- Add to "environment" in "web" in "docker-compose.yml"
+			* "DJANGO_SECURE_HSTS_SECONDS=0"
+			* "DJANDO_SECUREHSTS_INCLUDE_SUBDOMAILS=False"
+			* "DJANGO_SECURE_HSTS_PRELOAD=False"
+	9. Secure Cookies
+		- https://en.wikipedia.org/wiki/HTTP_cookie
+		- Add to "settings.py"
+			* SESSION_COOKIE_SECURE = enb.bool("DJANGO_SESSION_COOKIE_SECURE", default=True)
+			* CSRF_COOKIE_SECURE = env.bool("DJANGO_CSRF_COOKIE_SECURE", default=True)
+		- Add to "environment" in "web" in "docker-compose.yml"
+			* "SESSION_COOKIE_SECURE=False"
+			* "DJANGO_CSRF_COOKIE_SECURE=False"
+	10. Admin Hardening
+		- Simplest approach is to change 'admin/' url to anything else
+		- django-admin-honeypot
+			* https://github.com/dmpayton/django-admin-honeypot
+		- django-two-factor-auth
+			* https://github.com/Bouke/django-two-factor-auth
+
+
+
 crispy_forms :
 	1. docker-compose exec web pipenv install django-crispy-forms
 	2. Add 'crispy_forms', to "INSTALLED_APPS" in "setting.py"
@@ -335,7 +411,7 @@ First Deployment:
 	4. heroku crate --website_name
 	5. heroku git:remote -a --website_name
 	6. herokuaddons:create heroku-postgresql:hobby-dev
-	7. heroku configure:set SECRET_KEY='--secrete_key'
+	7. heroku configure:set SECRET_KEY='--secret_key'
 	8. git push heroku master
 	9. heroku ps:scale web=1
 	10. heroku run python manage.py migrate
