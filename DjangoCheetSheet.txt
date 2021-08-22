@@ -17,6 +17,11 @@ New project:
 		- Edit "DATABASES" in "settings.py" for desired DB
 		- docker-compose exec web python manage.py startapp accounts
 		- Create "class CustomUser(AbstractUser)" in "accounts/models.py"
+			id = models.UUIDField(  # configure id/pk to be UUID
+									primary_key=True,  # set as primary key
+									defalt=uuid.uuid4,  # set uuid4 for encription
+									editable=False  # make unique
+									)
 		- "settings.py":
 			* Add "accounts" to "INSTALLED_APPS"
 			* Add "AUTH_USER_MODEL = 'accounts.CustomUser'"
@@ -69,7 +74,7 @@ New project:
 			* ACCOUNT_SESSION_REMEMBER = None  # None: asks the user if to remember session, True: to remember session, False: to not remember session
 			* ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False  # True: asks the user to enter the password 2 times at sign up, False: asks the user to enter the password 1 time at sign up
 		- "docker-compose exec web python manage.py migrate"
-		- Add "path('accounts/', include('allauth.urls'))," in "urlpatterns" in the main "urls.py"
+		- Add "path('accounts/', include('allauth.urls'))," in "urlpatterns" in the main "accounts/urls.py"
 		- Add templates to "templates/account/" directory
 			* 'login.html'
 			* 'logout.html'
@@ -107,6 +112,49 @@ New project:
 		- In "evironment:" under "web" in 'docker-compose.yml' (if there is '$' sign, then you need cahnge to '$$'):
 			* - "DJANGO_SECRETE_KEY=gr3e87i3y4hith3uoierws9834"
 			* - "DJANGO_DEBUG=createsuperuser"
+	8. Email:
+		- Crate files (https://github.com/pennersr/django-allauth/tree/master/allauth/templates/account/email):
+			* templates/account/email/email_confirmation_signup_subject.txt
+			* templates/account/email/email_confirmation_signup_message.txt
+			* templates/account/email/emial_confirmation_subject.txt
+			* templates/account/email/emial_confirmation_message.txt
+		- Change "Site Name" and "Domain Name":
+			*  Log in to admin pannel
+			*  Select "example.com" and Edit "Site Name" and "Domain Name"
+		- Add "DEFAULT_FROM_EMAIL = admin@mail.com" to "settings.py"
+		- Configure Email, "settings.py":
+			* "EMAIL_BACKEND = django.core.mail.backends.smtp.EmailBackend"
+			* "EMAIL_HOST"
+			* "EMAIL_HOST_USER"
+			* "EMAIL_HOST_PASSWORD"
+			* "EMAIL_PORT"
+			* "EMAIL_USE_TLS"
+	9. Create an App:
+		- docker-compose exec web python manage.py createapp app_name
+		- Add "app_name" to "INSTALLED_APPS" in "settings.py"
+		- Edit "app_name/model.py" in "app_name":
+			* "class CustomModel(models.Model)"  # Define Model structure
+				id = models.UUIDField(  # configure id/pk to be UUID
+										primary_key=True,  # set as primary key
+										defalt=uuid.uuid4,  # set uuid4 for encription
+										editable=False  # make unique
+										)
+			* "def __str__(self)"  # Return string representation of the Model
+			* "def get_absolute_url(self)"  # Sets the canonical URL for the Model
+				return reverse(url, args=[str(self.id)])
+		- docker-compose exec web python manage.py makemigrations app_name
+		- docker-compose exec web python manage.py migrate
+		- Edit "app_name/admin.py" in "app_name":
+			* "calss CustomAdminModel(admin.ModelAdmin)"  # Custom Admin Model representation
+				"list_display = (field1, field2, field3,)"  # fields to display in Admin Panel
+			* "admin.site.register(CustomModel, CustomAdminModel)"
+		- Configure URLs
+			* To refere to a specific id, use "<uuid:pk>"
+		- Configure Views
+		- Create Templates for a non-REST site
+		- Unit tests CRUD
+	10. 
+
 
 
 
@@ -152,34 +200,13 @@ crispy_forms :
 
 
 
-New project:
-	1. Install:
-		* environs
-		* dj-database-url
-		* psycopg2-binary (for PostgreSQL)
-	2. Create .env file in root:
-		export DEBUG=True
-		export SECRET_KEY=random-secrete-string
-		export DATABASE_URL=sqlite:///db.sqlite3
-	3. Settings.py:
-		* update at top:
-			from environs import Env
 
 
-			# Environment variables
-			env = Env()
-			env.read_env()
-		* ALLOWED_HOSTS = ['.herokuapp.com', 'localhost', '127.0.0.1']
-		* DEBUG = env.bool("DEBUG", default=False)
-		* Update DATABASES:
-			DATABASES = {
-				'default': env.dj_db_url("DATABASE_URL")
-			}
-	4. Update SECRET_KEY (Optional):
-		* Run code:
-			import secrets
-			print(secrets.token_urlsafe())
-		* Update SECRET_KEY with output
+
+
+
+
+
 
 
 First Deployment:
