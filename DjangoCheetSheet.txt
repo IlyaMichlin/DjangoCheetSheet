@@ -182,7 +182,66 @@ New project:
 		- Use "UserPassesTestMixin" and "Groups" to make more restricting permissions
 		- Unit tests
 	12. Performance
-		-
+		- django-debug-tollbar
+			* docker-compose exec web pipenv install django-debug-toolbar
+			* decker-compose down
+			* Add 'debug-toolbar' to "INSTALLED_APPS" in "settings.py"
+			* Add 'debug_toolbar.middleware.DebugToolbarMiddleware' to "MIDDLEWARE" in "settings.py"
+			* Add to 'settings.py'
+				import socket
+				hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+				INTERNAL_IPS = [ip[:-1] + "1" for ip in ips]
+			* docker-compose up -d --build
+			* Add to the main "urls.py"
+				if settings.DEBUG:
+					import debug_toolbar
+					urlpatterns = [
+					path('__debug__/', include(debug_toolbar.urls)),
+					] + urlpatterns
+		- select_related()
+			* https://docs.djangoproject.com/en/3.2/ref/models/querysets/#select-related
+			* Debug tool for one-to-one and one-to-many Relationship
+			* The JOIN is done in SQL
+		- prefetch_related()
+			* https://docs.djangoproject.com/en/3.2/ref/models/querysets/#prefetch-related
+			* Debug tool for many-to-one and many-to-many Relationship
+			* The JOIN is done in Python
+		- Cashing
+			* Most common packeges are "Memcache" and "Redis"
+			* https://docs.djangoproject.com/en/3.2/topics/cache/
+			* https://redis.io/
+			* 4 types of caching:
+				* https://docs.djangoproject.com/en/3.2/topics/cache/#the-per-site-cache
+				* https://docs.djangoproject.com/en/3.2/topics/cache/#the-per-view-cache
+				* https://docs.djangoproject.com/en/3.2/topics/cache/#template-fragment-caching
+				* https://docs.djangoproject.com/en/3.2/topics/cache/#the-low-level-cache-api
+			* For per-site caching, add to "settings.py":
+				* MIDDLEWARE = [
+				'django.middleware.cache.UpdateCacheMiddleware',
+				...,
+				'django.middleware.cache.FetchCacheMiddleware'
+				]
+				* CACHE_MIDDLEWARE_ALIAS = 'default'
+				* CACHE_MIDDLEWARE_SECONDS = 604800  # One week
+				* CACHE_MIDDLEWARE_KEY_PREFIX = ''
+		- Indexing
+			* Rule of thumb, add indexing for fields used in 10-25% of all queries.
+			* Add in the "Meta" class inside the desired Model class:
+				indexes = [
+				models.Index(fields=['field_name'], name='index_name')
+				]
+			* Create new migrations and migrate
+		- django-extensions
+			* https://django-extensions.readthedocs.io/en/latest/
+			* Popular extension is "shell_plus" that loads all models to the shell_plus
+		- Front-end Assets:
+			* django-compression to compress CSS and JS files (https://github.com/django-compressor/django-compressor)
+			* Use CDN (Content Delivery Network) for email_confirmation_signup_message
+			* easy-thumbnails to save several image sizes (https://github.com/SmileyChris/easy-thumbnails)
+			* Images optimization e-book: https://web.dev/fast/#optimize-your-images
+			* Automated test for front-end speed: https://developers.google.com/speed/pagespeed/insights/
+	13. Security
+		- 
 
 
 
