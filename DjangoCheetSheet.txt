@@ -153,7 +153,33 @@ New project:
 		- Configure Views
 		- Create Templates for a non-REST site
 		- Unit tests CRUD
-	10. 
+	10. Create Reviews:
+		- Add to "app_name/models.py":
+			* "class Reviews(models.Model)"
+			* post = models.ForeignKey(  # Onew to many relationship
+										Post,  # Relationship model
+										on_delete=models.CASCADE,  # Delete review when deleting post
+										related_name='reviews'  # Name for Post instance to indicate a review
+										)
+		- docker-compose exec web python manage.py makemigrations app_name
+		- docker-compose exec web python manage.py migrate
+		- Edit "app_name/admin.py":
+			* class ReviewInline(admin.TabularInline):
+				model = Review
+			* In "CustomAdminModel" add:
+				inlines = [ReviewInline]
+		- Unit test CRUD
+	11. Permissions:
+		- Using Mixin:
+			* Add "LoginRequiredMixin" to the desired class based views as 1st inheritence
+			* In the view, add "login_url = 'account_login'"
+		- Custom permissions to "custom_model":
+			* Add to Meta class in the custom_model class:
+				permissions = [('permission_name', 'Permission description'),]
+			* Add "permission_name" to the desired users
+			* Add "PermissionRequiredMixin" to the desired view 2nd inheritence and add:
+				permission_reqired = 'custom_model.permision_name'
+		- Use "UserPassesTestMixin" and "Groups" to make more restricting permissions
 
 
 
@@ -180,6 +206,33 @@ Static Assets:
 		- static/images
 	3. Load static files in a HTML template using "{% load static %}"
 	4. To collect static files for production, run "docker-compose exec web python manage.py collectstatic"
+
+
+
+File/Image Upload:
+	1. Docker commands
+		- docker-compose exec web pipenv install pillow
+		- docker-compose down
+		- docker-compose up -d --build
+	2. Add to "settings.py". Add after "STATICFILES_FINDER":
+		- "MEDIA_ROOT = '/media/'"  # Absolute file system path to the directory for user-uploaded FileSystemFinder
+		- "MEDIA_URL = str(BASE_DIR/joinpath('media'))"  # URL for templates
+	3. create directory 'media'
+	4. Add to main 'urls.py':
+		- from django.conf import settings
+		- from django.conf.urls.static import static
+		- urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+	5. Add "models.ImageField(upload_to='folder_name/')"  # fill be loaded from MEDIA_ROOT/folder_name
+		- To upload regular file, change ImageField to File field1
+		- Add "blank=True" to ImageField if databese is already populated
+	6. Docker commands:
+		- docker-compose exec web python manage.py makemigrations app_name
+		- docker-compose exec web python manage.py migrate
+
+
+
+Search:
+	1. 
 
 
 
