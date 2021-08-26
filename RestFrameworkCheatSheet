@@ -68,6 +68,34 @@ Permissions:
 
 
 
+Authentication:
+    - Types:
+        * Basic
+        * Session
+        * Token
+        * Default
+    - "settings.py"
+        * INSTALLED_APPS:
+            * 'rest_framework.authentication'
+        * REST_FRAMEWORK:
+            * 'DEFAULT_AUTHENTICATION_CLASS': [
+            'rest_framework.authentication.SessionAuthentication',
+            'rest_framework.authentication.TokenAuthentication',
+            ]
+    - dj-rest-auth:
+        * 'settings.py':
+            * INSTALLED_APPS:
+                * 'dj-rest-auth'
+        * 'urls.py':
+            * path('path_to_auth', include('dj_rest_auth.urls')),
+        * Adds views:
+            * 'login/'
+            * 'logout/'
+            * 'password/reset/'
+            * 'password/reset/confirm/'
+
+
+
 CORS:
   - https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
   - Package = django-cors-Headers
