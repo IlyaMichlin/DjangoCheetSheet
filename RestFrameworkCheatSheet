@@ -1,4 +1,70 @@
+URLS:
+  - Regular Django routing
+  - SimpleRouter:
+    * This router includes routes for the standard set of list, create, retrieve, update, partial_update and destroy actions
+    * https://www.django-rest-framework.org/api-guide/routers/#simplerouter
+  - DefaultRouter:
+    * Same as SimpleRouter but with additionally includes a default API root view, that returns a response containing hyperlinks to all the list views. It also generates routes for optional .json style format suffixes
+    * https://www.django-rest-framework.org/api-guide/routers/#defaultrouter
 
+
+
+Serializers:
+    - serializers.Serializer
+        - https://www.django-rest-framework.org/tutorial/1-serialization/#creating-a-serializer-class
+        - Manualy create all serialization fields:
+            * field_name = serializers.CharField()
+        - Manualy create all actions:
+            * create
+            * update
+    - serializers.ModelSerializer
+        - class Meta:
+            model = model_name
+            fields = ('fiald_names',)
+
+
+
+Views:
+    - generics:
+        - Set following parameters:
+            * queryset
+            * serializer_class
+            * permission_classes = (PermissionClass,)  # oprional
+        - Combination of several Mixin classes
+            * CreateAPIView
+            * ListAPIView
+            * RetrieveAPIView
+            * DestroyAPIView
+            * UpdateAPIView
+            * ListCreateAPIView
+            * RetrieveUpdateAPIView
+            * RetrieveDestroyAPIView
+            * RetrieveUpdateDestroyAPIView
+
+
+
+Permissions:
+    - "settings.py"
+        - Setting default site permission:
+            REST_FRAMEFORK = {
+            'DEFAULT_PERMISSION_CLASSES': [
+            'rest_framework.permissions.AllowAny'
+            ]
+            }
+        - Options:
+            * AllowAny
+            * IsAuthenticated
+            * IsAdminUser
+            * IsAuthenticatedOrReadOnly
+    - "BasePermission":
+            - def has_permission(): view permission
+            - def has_object_permission(): model permission
+    - Custom model permission example:
+        class IsAuthenticatedOrReadOnly(permissions.BasePermission):
+            def has_object_permission(self, request, view, obj):
+                if request.method in permissions.SAFE_METHODS:
+                    return True
+                return obj.author == request.user
 
 
 
