@@ -1,0 +1,14 @@
+
+
+
+
+CORS:
+  - https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+  - Package = django-cors-Headers
+  - Update "settings.py"
+    * INSTALLED_APPS: 'corsheaders'
+    * MIDDLEWARE (above 'django.middleware.common.CommonMiddleware'): 'corsheaders.middlewre.CorsMiddleware'
+    * CORS_ORIGIN_WHITELIST = (
+    'http"//localhost:3000',
+    'http"//localhost:8000',
+    )
